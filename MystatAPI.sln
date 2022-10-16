@@ -1,0 +1,31 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.0.31903.59
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MystatAPI", "MystatAPI\MystatAPI.csproj", "{791F7321-A8A7-4F37-98B0-1480E55F2EE4}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MystatTest", "MystatTest\MystatTest.csproj", "{BB923D90-39DC-4E8E-B969-393D2239CB04}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{791F7321-A8A7-4F37-98B0-1480E55F2EE4}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{791F7321-A8A7-4F37-98B0-1480E55F2EE4}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{791F7321-A8A7-4F37-98B0-1480E55F2EE4}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{791F7321-A8A7-4F37-98B0-1480E55F2EE4}.Release|Any CPU.Build.0 = Release|Any CPU
+		{BB923D90-39DC-4E8E-B969-393D2239CB04}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{BB923D90-39DC-4E8E-B969-393D2239CB04}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{BB923D90-39DC-4E8E-B969-393D2239CB04}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{BB923D90-39DC-4E8E-B969-393D2239CB04}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {79C2C19B-71A1-4615-A133-6E714977EA36}
+	EndGlobalSection
+EndGlobal
