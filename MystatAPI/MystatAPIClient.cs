@@ -45,14 +45,14 @@ namespace MystatAPI
 
         private async Task<T> MakeRequest<T>(string url, bool retryOnUnaothorized = true)
         {
-            //HttpResponseMessage response = await sharedClient.GetAsync(url);
-
             var requestMessage = new HttpRequestMessage(HttpMethod.Get, url);
             requestMessage.Headers.Authorization = new AuthenticationHeaderValue("Bearer", AccessToken);
 
             var response = await sharedClient.SendAsync(requestMessage);
             
             requestMessage.Dispose();
+
+            var responseJson = await response.Content.ReadAsStringAsync();
 
             if (response.StatusCode == HttpStatusCode.Unauthorized)
             {
@@ -62,12 +62,12 @@ namespace MystatAPI
                     return await MakeRequest<T>(url, false);
                 }
 
-                // TODO: return error result
+                var responseError = JsonSerializer.Deserialize<MystatAuthError>(responseJson);
+                throw new MystatAuthException(responseError);
             }
 
             // TODO: check error
 
-            var responseJson = await response.Content.ReadAsStringAsync();
             var responseObject = JsonSerializer.Deserialize<T>(responseJson);
 
             return responseObject;
@@ -78,7 +78,6 @@ namespace MystatAPI
             var jsonObject = new
             {
                 application_key = applicationKey,
-                id_city = 6,
                 username = LoginData.Username,
                 password = LoginData.Password,
             };
