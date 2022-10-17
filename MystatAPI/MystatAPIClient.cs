@@ -13,6 +13,7 @@ namespace MystatAPI
     public class MystatAPIClient
     {
         const string applicationKey = "6a56a5df2667e65aab73ce76d1dd737f7d1faef9c52e8b8c55ac75f565d8e8a6";
+        int? groupId;
 
         private string AccessToken { get; set; }
         public UserLoginData LoginData { get; }
@@ -95,7 +96,11 @@ namespace MystatAPI
             {
                 return JsonSerializer.Deserialize<MystatAuthError[]>(responseJson)[0];
             }
+        }
 
+        public async Task<ProfileInfo> GetProfileInfo()
+        {
+            return await MakeRequest<ProfileInfo>("settings/user-info");
         }
 
         public async Task<DaySchedule[]> GetScheduleByDate(DateTime date)
@@ -107,11 +112,21 @@ namespace MystatAPI
         {
             return await MakeRequest<DaySchedule[]>($"schedule/operations/get-month?date_filter={Utils.FormatDate(date)}");
         }
+
+        public async Task<Homework[]> GetHomework(int page = 1, HomeworkStatus status = HomeworkStatus.Active, HomeworkType type = HomeworkType.Homework)
+        {
+            if(groupId is null)
+            {
+                var profileInfo = await GetProfileInfo();
+                groupId = profileInfo.CurrentGroupId;
+            }
+
+            return await MakeRequest<Homework[]>($"homework/operations/list?page={page}&status={(int)status}&type={(int)type}&group_id={groupId}");
+        }
     }
 
     internal static class Utils
     {
         public static string FormatDate(DateTime date) => $"{date.Year}-{date.Month:00}-{date.Day:00}";
-
     }
 }

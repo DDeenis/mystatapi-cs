@@ -27,6 +27,6 @@ namespace MystatAPI.Entity
         public string SubjectName { get; set; }
 
         [JsonPropertyName("teacher_name")]
-        public string TeacherName { get; set; }
+        public string TeacherFullName { get; set; }
     }
 }

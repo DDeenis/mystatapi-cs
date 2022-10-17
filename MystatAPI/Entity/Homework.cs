@@ -51,7 +51,7 @@ namespace MystatAPI.Entity
         public int GroupId { get; set; }
 
         [JsonPropertyName("id_spec")]
-        public int SUbjectId { get; set; }
+        public int SubjectId { get; set; }
 
         [JsonPropertyName("id_teach")]
         public int TeacherId { get; set; }
@@ -94,5 +94,11 @@ namespace MystatAPI.Entity
         Uploaded,
         Active,
         Deleted = 5,
+    }
+
+    public enum HomeworkType
+    {
+        Homework,
+        Lab,
     }
 }
