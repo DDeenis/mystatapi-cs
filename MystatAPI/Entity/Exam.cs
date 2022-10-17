@@ -15,13 +15,13 @@ namespace MystatAPI.Entity
         public string SubjectName { get; set; }
 
         [JsonPropertyName("teacher")]
-        public string TeacherFullName { get; set; }
+        public string? TeacherFullName { get; set; }
 
         [JsonPropertyName("mark")]
         public int? Mark { get; set; }
 
         [JsonPropertyName("date")]
-        public string Date { get; set; }
+        public string? Date { get; set; }
 
         [JsonPropertyName("mark_type")]
         public int? MarkType { get; set; }

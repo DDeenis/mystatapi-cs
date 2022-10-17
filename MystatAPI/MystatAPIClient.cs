@@ -7,6 +7,7 @@ using MystatAPI.Entity;
 using System.Text;
 using MystatAPI.Exceptions;
 using System.Net.Http.Headers;
+using System.IO;
 
 namespace MystatAPI
 {
@@ -16,7 +17,7 @@ namespace MystatAPI
         int? groupId;
 
         private string AccessToken { get; set; }
-        public UserLoginData LoginData { get; }
+        public UserLoginData LoginData { get; private set; }
 
         private static HttpClient sharedClient = new HttpClient()
         {
@@ -27,6 +28,11 @@ namespace MystatAPI
         {
             LoginData = loginData;
             AccessToken = string.Empty;
+        }
+
+        public void SetLoginData(UserLoginData loginData)
+        {
+            LoginData = loginData;
         }
 
         private async Task UpdateAccessToken()
@@ -67,11 +73,35 @@ namespace MystatAPI
                 throw new MystatAuthException(responseError);
             }
 
-            // TODO: check error
-
             var responseObject = JsonSerializer.Deserialize<T>(responseJson);
 
             return responseObject;
+        }
+
+        private async Task<T> PostRequest<T>(string url, MultipartFormDataContent form)
+        {
+            var requestMessage = new HttpRequestMessage(HttpMethod.Post, url);
+            requestMessage.Headers.Authorization = new AuthenticationHeaderValue("Bearer", AccessToken);
+            requestMessage.Content = form;
+
+            var response = await sharedClient.SendAsync(requestMessage);
+
+            requestMessage.Dispose();
+
+            var responseJson = await response.Content.ReadAsStringAsync();
+            var responseObject = JsonSerializer.Deserialize<T>(responseJson);
+            return responseObject;
+        }
+
+        private async Task PostRequest(string url, string body)
+        {
+            var requestMessage = new HttpRequestMessage(HttpMethod.Post, url);
+            requestMessage.Headers.Authorization = new AuthenticationHeaderValue("Bearer", AccessToken);
+            requestMessage.Content = new StringContent(body, Encoding.UTF8, "application/json");
+
+            await sharedClient.SendAsync(requestMessage);
+
+            requestMessage.Dispose();
         }
 
         public async Task<MystatAuthResponse> Login()
@@ -122,6 +152,48 @@ namespace MystatAPI
             }
 
             return await MakeRequest<Homework[]>($"homework/operations/list?page={page}&status={(int)status}&type={(int)type}&group_id={groupId}");
+        }
+
+        public async Task<UploadedHomeworkInfo> UploadHomework(int homeworkId, string? filePath, string? answerText = null, int spentTimeHour = 99, int spentTimeMin = 59)
+        {
+            MultipartFormDataContent form = new MultipartFormDataContent();
+
+            form.Add(new StringContent(homeworkId.ToString()), "id");
+            form.Add(new StringContent(spentTimeHour.ToString()), "spentTimeHour");
+            form.Add(new StringContent(spentTimeMin.ToString()), "spentTimeMin");
+
+            if(answerText is not null)
+            {
+                form.Add(new StringContent(answerText), "answerText");
+            }
+
+            if(filePath is not null)
+            {
+                var fileName = new FileInfo(filePath).Name;
+                var fileBytes = File.ReadAllBytes(filePath);
+                form.Add(new ByteArrayContent(fileBytes, 0, fileBytes.Length), "file", fileName);
+            }
+
+            return await PostRequest<UploadedHomeworkInfo>("homework/operations/create", form);
+        }
+
+        public async Task RemoveHomework(int homeworkId)
+        {
+            var body = new
+            {
+                id = homeworkId
+            };
+            await PostRequest("homework/operations/delete", JsonSerializer.Serialize(body));
+        }
+
+        public async Task<Exam[]> GetAllExams()
+        {
+            return await MakeRequest<Exam[]>("progress/operations/student-exams");
+        }
+
+        public async Task<Exam[]> GetFutureExams()
+        {
+            return await MakeRequest<Exam[]>("dashboard/info/future-exams");
         }
     }
 
