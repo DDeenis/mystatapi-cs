@@ -30,6 +30,10 @@ namespace MystatAPI
             AccessToken = string.Empty;
         }
 
+        public MystatAPIClient() : this(new())
+        {
+        }
+
         public void SetLoginData(UserLoginData loginData)
         {
             LoginData = loginData;
@@ -91,17 +95,6 @@ namespace MystatAPI
             var responseJson = await response.Content.ReadAsStringAsync();
             var responseObject = JsonSerializer.Deserialize<T>(responseJson);
             return responseObject;
-        }
-
-        private async Task PostRequest(string url, string body)
-        {
-            var requestMessage = new HttpRequestMessage(HttpMethod.Post, url);
-            requestMessage.Headers.Authorization = new AuthenticationHeaderValue("Bearer", AccessToken);
-            requestMessage.Content = new StringContent(body, Encoding.UTF8, "application/json");
-
-            await sharedClient.SendAsync(requestMessage);
-
-            requestMessage.Dispose();
         }
 
         public async Task<MystatAuthResponse> Login()
@@ -177,13 +170,23 @@ namespace MystatAPI
             return await PostRequest<UploadedHomeworkInfo>("homework/operations/create", form);
         }
 
-        public async Task RemoveHomework(int homeworkId)
+        public async Task<bool> RemoveHomework(int homeworkId)
         {
             var body = new
             {
                 id = homeworkId
             };
-            await PostRequest("homework/operations/delete", JsonSerializer.Serialize(body));
+
+            const string url = "homework/operations/delete";
+            var requestMessage = new HttpRequestMessage(HttpMethod.Post, url);
+            requestMessage.Headers.Authorization = new AuthenticationHeaderValue("Bearer", AccessToken);
+            requestMessage.Content = new StringContent(JsonSerializer.Serialize(body), Encoding.UTF8, "application/json");
+
+            var response = await sharedClient.SendAsync(requestMessage);
+
+            requestMessage.Dispose();
+
+            return response.StatusCode == HttpStatusCode.NoContent;
         }
 
         public async Task<Exam[]> GetAllExams()
