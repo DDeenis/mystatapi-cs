@@ -113,6 +113,7 @@ namespace MystatAPI
             try
             {
                 var responseObject = JsonSerializer.Deserialize<MystatAuthSuccess>(responseJson);
+                AccessToken = responseObject.AccessToken;
                 return responseObject;
             }
             catch (Exception)
