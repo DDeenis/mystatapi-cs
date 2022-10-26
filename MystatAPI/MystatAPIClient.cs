@@ -90,8 +90,13 @@ namespace MystatAPI
 
             var response = await sharedClient.SendAsync(requestMessage);
 
-            requestMessage.Dispose();
+            if(response.StatusCode == HttpStatusCode.Unauthorized)
+            {
+                await UpdateAccessToken();
+                return await PostRequest<T>(url, form);
+            }
 
+            requestMessage.Dispose();
             var responseJson = await response.Content.ReadAsStringAsync();
             var responseObject = JsonSerializer.Deserialize<T>(responseJson);
             return responseObject;
@@ -186,6 +191,11 @@ namespace MystatAPI
             var response = await sharedClient.SendAsync(requestMessage);
 
             requestMessage.Dispose();
+            if (response.StatusCode == HttpStatusCode.Unauthorized)
+            {
+                await UpdateAccessToken();
+                return await RemoveHomework(homeworkId);
+            }
 
             return response.StatusCode == HttpStatusCode.NoContent;
         }
