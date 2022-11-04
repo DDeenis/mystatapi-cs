@@ -25,12 +25,12 @@ namespace MystatAPI
             BaseAddress = new Uri("https://msapi.itstep.org/api/v2/"),
         };
 
-        public MystatAPIClient(UserLoginData loginData, string language = "ru_RU")
+        public MystatAPIClient(UserLoginData loginData, string language = "ru")
         {
             LoginData = loginData;
             AccessToken = string.Empty;
             Language = language;
-            sharedClient.DefaultRequestHeaders.AcceptLanguage.Add(new StringWithQualityHeaderValue(Language));
+            sharedClient.DefaultRequestHeaders.Add("x-language", Language);
         }
 
         public MystatAPIClient() : this(new())
@@ -45,8 +45,8 @@ namespace MystatAPI
         public void SetLanguage(string language)
         {
             Language = language;
-            sharedClient.DefaultRequestHeaders.AcceptLanguage.Clear();
-            sharedClient.DefaultRequestHeaders.AcceptLanguage.Add(new StringWithQualityHeaderValue(Language));
+            sharedClient.DefaultRequestHeaders.Remove("x-language");
+            sharedClient.DefaultRequestHeaders.Add("x-language", Language);
         }
 
         private async Task UpdateAccessToken()
@@ -64,7 +64,7 @@ namespace MystatAPI
             AccessToken = token;
         }
 
-        private async Task<T> MakeRequest<T>(string url, bool retryOnUnaothorized = true)
+        private async Task<T> MakeRequest<T>(string url, bool retryOnUnathorized = true)
         {
             var requestMessage = new HttpRequestMessage(HttpMethod.Get, url);
             requestMessage.Headers.Authorization = new AuthenticationHeaderValue("Bearer", AccessToken);
@@ -77,7 +77,7 @@ namespace MystatAPI
 
             if (response.StatusCode == HttpStatusCode.Unauthorized)
             {
-                if(retryOnUnaothorized)
+                if(retryOnUnathorized)
                 {
                     await UpdateAccessToken();
                     return await MakeRequest<T>(url, false);
@@ -92,7 +92,7 @@ namespace MystatAPI
             return responseObject;
         }
 
-        private async Task<T> PostRequest<T>(string url, MultipartFormDataContent form)
+        private async Task<T> PostRequest<T>(string url, MultipartFormDataContent form, bool retryOnUnatorized = true)
         {
             var requestMessage = new HttpRequestMessage(HttpMethod.Post, url);
             requestMessage.Headers.Authorization = new AuthenticationHeaderValue("Bearer", AccessToken);
@@ -102,8 +102,14 @@ namespace MystatAPI
 
             if(response.StatusCode == HttpStatusCode.Unauthorized)
             {
-                await UpdateAccessToken();
-                return await PostRequest<T>(url, form);
+                if(retryOnUnatorized)
+                {
+                    await UpdateAccessToken();
+                    return await PostRequest<T>(url, form);
+                }
+
+                var responseError = JsonSerializer.Deserialize<MystatAuthError>(await response.Content.ReadAsStringAsync());
+                throw new MystatAuthException(responseError);
             }
 
             requestMessage.Dispose();
@@ -122,7 +128,6 @@ namespace MystatAPI
             };
             var content = new StringContent(JsonSerializer.Serialize(jsonObject), Encoding.UTF8, "application/json");
             var response = await sharedClient.PostAsync("auth/login", content);
-
             var responseJson = await response.Content.ReadAsStringAsync();
 
             try
