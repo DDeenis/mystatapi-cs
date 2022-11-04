@@ -17,6 +17,7 @@ namespace MystatAPI
         int? groupId;
 
         private string AccessToken { get; set; }
+        public string Language { get; private set; }
         public UserLoginData LoginData { get; private set; }
 
         private static HttpClient sharedClient = new HttpClient()
@@ -24,10 +25,12 @@ namespace MystatAPI
             BaseAddress = new Uri("https://msapi.itstep.org/api/v2/"),
         };
 
-        public MystatAPIClient(UserLoginData loginData)
+        public MystatAPIClient(UserLoginData loginData, string language = "ru_RU")
         {
             LoginData = loginData;
             AccessToken = string.Empty;
+            Language = language;
+            sharedClient.DefaultRequestHeaders.AcceptLanguage.Add(new StringWithQualityHeaderValue(Language));
         }
 
         public MystatAPIClient() : this(new())
@@ -37,6 +40,13 @@ namespace MystatAPI
         public void SetLoginData(UserLoginData loginData)
         {
             LoginData = loginData;
+        }
+
+        public void SetLanguage(string language)
+        {
+            Language = language;
+            sharedClient.DefaultRequestHeaders.AcceptLanguage.Clear();
+            sharedClient.DefaultRequestHeaders.AcceptLanguage.Add(new StringWithQualityHeaderValue(Language));
         }
 
         private async Task UpdateAccessToken()
@@ -208,6 +218,11 @@ namespace MystatAPI
         public async Task<Exam[]> GetFutureExams()
         {
             return await MakeRequest<Exam[]>("dashboard/info/future-exams");
+        }
+
+        public async Task<Activity[]> GetActivities()
+        {
+            return await MakeRequest<Activity[]>("dashboard/progress/activity");
         }
     }
 
