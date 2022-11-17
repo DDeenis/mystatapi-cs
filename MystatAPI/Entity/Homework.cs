@@ -42,7 +42,7 @@ namespace MystatAPI.Entity
         public string TeacherFullName { get; set; }
 
         [JsonPropertyName("homework_comment")]
-        public string? HomeworkComment { get; set; }
+        public HomeworkComment? HomeworkComment { get; set; }
 
         [JsonPropertyName("homework_stud")]
         public UploadedHomeworkInfo UploadedHomework { get; set; }
@@ -86,7 +86,22 @@ namespace MystatAPI.Entity
         [JsonPropertyName("auto_mark")]
         public bool AutoMark { get; set; }
     }
-    
+
+    public class HomeworkComment
+    {
+        [JsonPropertyName("text_comment")]
+        public string? Text { get; set; }
+
+        [JsonPropertyName("attachment")]
+        public string? Attachment { get; set; }
+
+        [JsonPropertyName("attachment_path")]
+        public string? AttachmentPath { get; set; }
+
+        [JsonPropertyName("date_updated")]
+        public string UpdateDate { get; set; }
+    }
+
     public enum HomeworkStatus
     {
         Overdue,
