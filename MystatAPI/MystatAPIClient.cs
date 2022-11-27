@@ -190,6 +190,27 @@ namespace MystatAPI
 
             return await PostRequest<UploadedHomeworkInfo>("homework/operations/create", form);
         }
+        
+        public async Task<UploadedHomeworkInfo> UploadHomework(int homeworkId, HomeworkFile? homeworkFile, string? answerText = null, int spentTimeHour = 99, int spentTimeMin = 59)
+        {
+            MultipartFormDataContent form = new MultipartFormDataContent();
+
+            form.Add(new StringContent(homeworkId.ToString()), "id");
+            form.Add(new StringContent(spentTimeHour.ToString()), "spentTimeHour");
+            form.Add(new StringContent(spentTimeMin.ToString()), "spentTimeMin");
+
+            if(answerText is not null)
+            {
+                form.Add(new StringContent(answerText), "answerText");
+            }
+
+            if(homeworkFile is not null)
+            {
+                form.Add(new ByteArrayContent(homeworkFile.Bytes, 0, homeworkFile.Bytes.Length), "file", homeworkFile.Name);
+            }
+
+            return await PostRequest<UploadedHomeworkInfo>("homework/operations/create", form);
+        }
 
         public async Task<bool> RemoveHomework(int homeworkId)
         {
@@ -228,6 +249,18 @@ namespace MystatAPI
         public async Task<Activity[]> GetActivities()
         {
             return await MakeRequest<Activity[]>("dashboard/progress/activity");
+        }
+    }
+
+    public class HomeworkFile
+    {
+        public string Name { get; }
+        public byte[] Bytes { get; }
+
+        public HomeworkFile(string name, byte[] bytes)
+        {
+            Name = name;
+            Bytes = bytes;
         }
     }
 
