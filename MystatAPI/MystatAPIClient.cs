@@ -191,22 +191,18 @@ namespace MystatAPI
             return await PostRequest<UploadedHomeworkInfo>("homework/operations/create", form);
         }
         
-        public async Task<UploadedHomeworkInfo> UploadHomework(int homeworkId, HomeworkFile? homeworkFile, string? answerText = null, int spentTimeHour = 99, int spentTimeMin = 59)
+        public async Task<UploadedHomeworkInfo> UploadHomeworkFile(int homeworkId, HomeworkFile homeworkFile, string? answerText = null, int spentTimeHour = 99, int spentTimeMin = 59)
         {
             MultipartFormDataContent form = new MultipartFormDataContent();
 
             form.Add(new StringContent(homeworkId.ToString()), "id");
             form.Add(new StringContent(spentTimeHour.ToString()), "spentTimeHour");
             form.Add(new StringContent(spentTimeMin.ToString()), "spentTimeMin");
+            form.Add(new ByteArrayContent(homeworkFile.Bytes, 0, homeworkFile.Bytes.Length), "file", homeworkFile.Name);
 
             if(answerText is not null)
             {
                 form.Add(new StringContent(answerText), "answerText");
-            }
-
-            if(homeworkFile is not null)
-            {
-                form.Add(new ByteArrayContent(homeworkFile.Bytes, 0, homeworkFile.Bytes.Length), "file", homeworkFile.Name);
             }
 
             return await PostRequest<UploadedHomeworkInfo>("homework/operations/create", form);
