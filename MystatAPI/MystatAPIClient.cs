@@ -8,6 +8,7 @@ using System.Text;
 using MystatAPI.Exceptions;
 using System.Net.Http.Headers;
 using System.IO;
+using System.Linq;
 
 namespace MystatAPI
 {
@@ -149,12 +150,17 @@ namespace MystatAPI
 
         public async Task<DaySchedule[]> GetScheduleByDate(DateTime date)
         {
-            return await MakeRequest<DaySchedule[]>($"schedule/operations/get-by-date?date_filter={Utils.FormatDate(date)}");
+            return SortSchedule(await MakeRequest<DaySchedule[]>($"schedule/operations/get-by-date?date_filter={Utils.FormatDate(date)}"));
         }
 
         public async Task<DaySchedule[]> GetMonthSchedule(DateTime date)
         {
-            return await MakeRequest<DaySchedule[]>($"schedule/operations/get-month?date_filter={Utils.FormatDate(date)}");
+            return SortSchedule(await MakeRequest<DaySchedule[]>($"schedule/operations/get-month?date_filter={Utils.FormatDate(date)}"));
+        }
+
+        private DaySchedule[] SortSchedule(DaySchedule[] schedule)
+        {
+            return schedule.OrderBy(s => TimeOnly.Parse(s.StartedAt)).ToArray();
         }
 
         public async Task<Homework[]> GetHomework(int page = 1, HomeworkStatus status = HomeworkStatus.Active, HomeworkType type = HomeworkType.Homework)
