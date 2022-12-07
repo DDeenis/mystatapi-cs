@@ -232,6 +232,11 @@ namespace MystatAPI
             return response.StatusCode == HttpStatusCode.NoContent;
         }
 
+        public async Task<HomeworkCount[]> GetHomeworkCount()
+        {
+            return await MakeRequest<HomeworkCount[]>("count/homework");
+        }
+
         public async Task<Exam[]> GetAllExams()
         {
             return await MakeRequest<Exam[]>("progress/operations/student-exams");

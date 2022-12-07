@@ -102,6 +102,15 @@ namespace MystatAPI.Entity
         public string UpdateDate { get; set; }
     }
 
+    public class HomeworkCount
+    {
+        [JsonPropertyName("counter_type")]
+        public HomeworkStatus Status { get; set; }
+
+        [JsonPropertyName("counter")]
+        public int Count { get; set; }
+    }
+
     public enum HomeworkStatus
     {
         Overdue,
