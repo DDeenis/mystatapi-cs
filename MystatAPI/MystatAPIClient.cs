@@ -257,6 +257,26 @@ namespace MystatAPI
         {
             return await MakeRequest<Activity[]>("dashboard/progress/activity");
         }
+
+        public async Task<GroupInfo[]> GetGroupInfo()
+        {
+            return await MakeRequest<GroupInfo[]>("homework/settings/group-history");
+        }
+
+        public async Task<Student[]> GetGroupLeaders()
+        {
+            return await MakeRequest<Student[]>("dashboard/progress/leader-group");
+        }
+
+        public async Task<Student[]> GetStreamLeaders()
+        {
+            return await MakeRequest<Student[]>("dashboard/progress/leader-stream");
+        }
+
+        public async Task<LessonVisit[]> GetVisitHistory()
+        {
+            return await MakeRequest<LessonVisit[]>("progress/operations/student-visits");
+        }
     }
 
     public class HomeworkFile

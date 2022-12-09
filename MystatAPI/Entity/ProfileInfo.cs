@@ -45,21 +45,6 @@ namespace MystatAPI.Entity
         public VisibilityInfo Visibility { get; set; }
     }
 
-    public class Group
-    {
-        [JsonPropertyName("id")]
-        public int Id { get; set; }
-
-        [JsonPropertyName("group_status")]
-        public int GroupStatus { get; set; }
-
-        [JsonPropertyName("name")]
-        public string Name { get; set; }
-
-        [JsonPropertyName("is_primary")]
-        public bool IsPrimary { get; set; }
-    }
-
     public class VisibilityInfo
     {
         [JsonPropertyName("is_birthday")]
