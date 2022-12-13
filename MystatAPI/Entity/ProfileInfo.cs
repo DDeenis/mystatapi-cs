@@ -43,6 +43,9 @@ namespace MystatAPI.Entity
 
         [JsonPropertyName("visibility")]
         public VisibilityInfo Visibility { get; set; }
+        
+        [JsonPropertyName("gaming_points")]
+        public GamingPoint[] Points { get; set; }
     }
 
     public class VisibilityInfo
@@ -94,5 +97,20 @@ namespace MystatAPI.Entity
 
         [JsonPropertyName("is_vacancy")]
         public bool IsVacancy { get; set; }
+    }
+
+    public class GamingPoint
+    {
+        [JsonPropertyName("new_gaming_point_types__id")]
+        public GamingPointTypes PointType { get; set; }
+
+        [JsonPropertyName("points")]
+        public int PointsCount { get; set; }
+    }
+
+    public enum GamingPointTypes
+    {
+        Gems = 1,
+        Coins
     }
 }
