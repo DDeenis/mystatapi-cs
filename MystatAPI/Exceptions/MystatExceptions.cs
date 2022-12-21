@@ -18,4 +18,6 @@ namespace MystatAPI.Exceptions
 
         public MystatAuthException(MystatAuthError authError) : this(authError.Message, authError.Field) { }
     }
+
+    public class MystatException : Exception { }
 }

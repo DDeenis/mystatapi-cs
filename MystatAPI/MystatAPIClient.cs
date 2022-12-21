@@ -112,6 +112,10 @@ namespace MystatAPI
                 var responseError = JsonSerializer.Deserialize<MystatAuthError>(await response.Content.ReadAsStringAsync());
                 throw new MystatAuthException(responseError);
             }
+            else if (!response.IsSuccessStatusCode)
+            {
+                throw new MystatException();
+            }
 
             requestMessage.Dispose();
             var responseJson = await response.Content.ReadAsStringAsync();
