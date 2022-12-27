@@ -12,7 +12,7 @@ namespace MystatAPI.Entity
         public int AchievementsId { get; set; }
 
         [JsonPropertyName("achievements_type")]
-        public int AchievementsType { get; set; }
+        public int? AchievementsType { get; set; }
 
         [JsonPropertyName("action")]
         public int Action { get; set; }
