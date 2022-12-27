@@ -281,17 +281,25 @@ namespace MystatAPI
         {
             return await MakeRequest<LessonVisit[]>("progress/operations/student-visits");
         }
-    }
 
-    public class HomeworkFile
-    {
-        public string Name { get; }
-        public byte[] Bytes { get; }
-
-        public HomeworkFile(string name, byte[] bytes)
+        public async Task<LeadersSummary> GetGroupLeadersSummary()
         {
-            Name = name;
-            Bytes = bytes;
+            return await MakeRequest<LeadersSummary>("dashboard/progress/leader-group-points");
+        }
+
+        public async Task<LeadersSummary> GetStreamLeadersSummary()
+        {
+            return await MakeRequest<LeadersSummary>("dashboard/progress/leader-stream-points");
+        }
+
+        public async Task<ProgressMonthInfo[]> GetAttendanceInfo()
+        {
+            return await MakeRequest<ProgressMonthInfo[]>("dashboard/chart/attendance");
+        }
+
+        public async Task<ProgressMonthInfo[]> GetGradesInfo()
+        {
+            return await MakeRequest<ProgressMonthInfo[]>("dashboard/chart/average-progress");
         }
     }
 

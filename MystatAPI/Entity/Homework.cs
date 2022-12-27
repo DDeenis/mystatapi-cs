@@ -125,4 +125,16 @@ namespace MystatAPI.Entity
         Homework,
         Lab,
     }
+
+    public class HomeworkFile
+    {
+        public string Name { get; }
+        public byte[] Bytes { get; }
+
+        public HomeworkFile(string name, byte[] bytes)
+        {
+            Name = name;
+            Bytes = bytes;
+        }
+    }
 }
