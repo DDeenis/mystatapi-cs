@@ -137,6 +137,7 @@ namespace MystatAPI
 
             try
             {
+                groupId = null;
                 var responseObject = JsonSerializer.Deserialize<MystatAuthSuccess>(responseJson);
                 AccessToken = responseObject.AccessToken;
                 return responseObject;
