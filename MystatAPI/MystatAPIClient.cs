@@ -302,6 +302,38 @@ namespace MystatAPI
         {
             return await MakeRequest<ProgressMonthInfo[]>("dashboard/chart/average-progress");
         }
+
+        public async Task<EvaluateLessonItem[]> GetEvaluateLessonList()
+        {
+            return await MakeRequest<EvaluateLessonItem[]>("feedback/students/evaluate-lesson-list");
+        }
+        
+        public async Task<bool> EvaluateLesson(string key, int lessonMark, int teacherMark, string? comment = null)
+        {
+            var body = new
+            {
+                key,
+                mark_lesson = lessonMark,
+                mark_teach = teacherMark,
+                comment
+            };
+
+            const string url = "feedback/students/evaluate-lesson";
+            var requestMessage = new HttpRequestMessage(HttpMethod.Post, url);
+            requestMessage.Headers.Authorization = new AuthenticationHeaderValue("Bearer", AccessToken);
+            requestMessage.Content = new StringContent(JsonSerializer.Serialize(body), Encoding.UTF8, "application/json");
+
+            var response = await sharedClient.SendAsync(requestMessage);
+
+            requestMessage.Dispose();
+            if (response.StatusCode == HttpStatusCode.Unauthorized)
+            {
+                await UpdateAccessToken();
+                return await EvaluateLesson(key, lessonMark, teacherMark);
+            }
+
+            return response.StatusCode == HttpStatusCode.ResetContent;
+        }
     }
 
     internal static class Utils
