@@ -247,6 +247,11 @@ namespace MystatAPI
         {
             return await MakeRequest<HomeworkCount[]>("count/homework");
         }
+		
+		public async Task<Spec[]> GetSpecsList()
+        {
+            return await MakeRequest<Spec[]>("settings/group-specs");
+        }
 
         public async Task<Exam[]> GetAllExams()
         {
