@@ -258,9 +258,9 @@ namespace MystatAPI
             return await MakeRequest<Exam[]>("dashboard/info/future-exams");
         }
 
-        public async Task<Activity[]> GetActivities()
+        public async Task<ActivityLog[]> GetActivities()
         {
-            return await MakeRequest<Activity[]>("dashboard/progress/activity");
+            return await MakeRequest<ActivityLog[]>("dashboard/progress/activity");
         }
 
         public async Task<GroupInfo[]> GetGroupInfo()

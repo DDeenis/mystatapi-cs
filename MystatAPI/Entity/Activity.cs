@@ -6,6 +6,15 @@ using System.Threading.Tasks;
 
 namespace MystatAPI.Entity
 {
+    public class ActivityLog
+    {
+        [JsonPropertyName("activity_log")]
+        public Activity[] Activity { get; set; }
+
+        [JsonPropertyName("date")]
+        public string Date { get; set; }
+    }
+
     public class Activity
     {
         [JsonPropertyName("achievements_id")]
