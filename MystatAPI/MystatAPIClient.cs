@@ -168,7 +168,7 @@ namespace MystatAPI
             return schedule.OrderBy(s => TimeOnly.Parse(s.StartedAt)).ToArray();
         }
 
-        public async Task<Homework[]> GetHomework(int page = 1, HomeworkStatus status = HomeworkStatus.Active, HomeworkType type = HomeworkType.Homework)
+        public async Task<Homework[]> GetHomework(int page = 1, HomeworkStatus status = HomeworkStatus.Active, int? specId = null, HomeworkType type = HomeworkType.Homework)
         {
             if(groupId is null)
             {
@@ -176,7 +176,8 @@ namespace MystatAPI
                 groupId = profileInfo.CurrentGroupId;
             }
 
-            return await MakeRequest<Homework[]>($"homework/operations/list?page={page}&status={(int)status}&type={(int)type}&group_id={groupId}");
+            return await MakeRequest<Homework[]>($"homework/operations/list?page={page}&status={(int)status}&type={(int)type}&group_id={groupId}" +
+                                                 (specId == null ? "" : $"&spec_id={specId}"));
         }
 
         public async Task<UploadedHomeworkInfo> UploadHomework(int homeworkId, string? filePath, string? answerText = null, int spentTimeHour = 99, int spentTimeMin = 59)
@@ -243,9 +244,14 @@ namespace MystatAPI
             return response.StatusCode == HttpStatusCode.NoContent;
         }
 
-        public async Task<HomeworkCount[]> GetHomeworkCount()
+        public async Task<HomeworkCount[]> GetHomeworkCount(int? specId = null)
         {
-            return await MakeRequest<HomeworkCount[]>("count/homework");
+            return await MakeRequest<HomeworkCount[]>("count/homework" + (specId == null ? "" : $"?spec_id={specId}"));
+        }
+		
+		public async Task<Spec[]> GetSpecsList()
+        {
+            return await MakeRequest<Spec[]>("settings/group-specs");
         }
 
         public async Task<Exam[]> GetAllExams()
