@@ -16,8 +16,9 @@ namespace MystatAPI
     {
         const string applicationKey = "6a56a5df2667e65aab73ce76d1dd737f7d1faef9c52e8b8c55ac75f565d8e8a6";
         int? groupId;
+		public int? GroudId { get => groupId; set => groupId = value; }
 
-        private string AccessToken { get; set; }
+		private string AccessToken { get; set; }
         public string Language { get; private set; }
         public UserLoginData LoginData { get; private set; }
 
