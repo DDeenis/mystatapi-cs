@@ -161,7 +161,7 @@ namespace MystatAPI
 
         public async Task<DaySchedule[]> GetMonthSchedule(DateTime date)
         {
-            return await MakeRequest<DaySchedule[]>($"schedule/operations/get-month?date_filter={Utils.FormatDate(date)}");
+            return SortSchedule(await MakeRequest<DaySchedule[]>($"schedule/operations/get-month?date_filter={Utils.FormatDate(date)}"));
         }
 
         private DaySchedule[] SortSchedule(DaySchedule[] schedule)
