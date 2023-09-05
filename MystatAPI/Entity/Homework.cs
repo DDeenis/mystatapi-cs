@@ -113,11 +113,11 @@ namespace MystatAPI.Entity
 
     public enum HomeworkStatus
     {
-        Overdue,
-        Checked,
-        Uploaded,
-        Active,
+        Checked = 1,
+        Uploaded = 2,
+        Active = 3,
         Deleted = 5,
+        Overdue = 6,
     }
 
     public enum HomeworkType
