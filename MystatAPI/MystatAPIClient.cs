@@ -16,7 +16,7 @@ namespace MystatAPI
     {
         const string applicationKey = "6a56a5df2667e65aab73ce76d1dd737f7d1faef9c52e8b8c55ac75f565d8e8a6";
         int? groupId;
-		public int? GroudId { get => groupId; set => groupId = value; }
+		public int? GroupId { get => groupId; set => groupId = value; }
 
 		private string AccessToken { get; set; }
         public string Language { get; private set; }
@@ -138,7 +138,7 @@ namespace MystatAPI
 
             try
             {
-                groupId = null;
+                GroupId = null;
                 var responseObject = JsonSerializer.Deserialize<MystatAuthSuccess>(responseJson);
                 AccessToken = responseObject.AccessToken;
                 return responseObject;
@@ -171,10 +171,10 @@ namespace MystatAPI
 
         public async Task<Homework[]> GetHomework(int page = 1, HomeworkStatus status = HomeworkStatus.Active, int? specId = null, HomeworkType type = HomeworkType.Homework)
         {
-            if(groupId is null)
+            if(GroupId is null)
             {
                 var profileInfo = await GetProfileInfo();
-                groupId = profileInfo.CurrentGroupId;
+                GroupId = profileInfo.CurrentGroupId;
             }
 
             return await MakeRequest<Homework[]>($"homework/operations/list?page={page}&status={(int)status}&type={(int)type}&group_id={groupId}" +
@@ -183,13 +183,14 @@ namespace MystatAPI
 
         public async Task<UploadedHomeworkInfo> UploadHomework(int homeworkId, string? filePath, string? answerText = null, int spentTimeHour = 99, int spentTimeMin = 59)
         {
-            MultipartFormDataContent form = new MultipartFormDataContent();
+            MultipartFormDataContent form = new MultipartFormDataContent
+            {
+                { new StringContent(homeworkId.ToString()), "id" },
+                { new StringContent(spentTimeHour.ToString()), "spentTimeHour" },
+                { new StringContent(spentTimeMin.ToString()), "spentTimeMin" }
+            };
 
-            form.Add(new StringContent(homeworkId.ToString()), "id");
-            form.Add(new StringContent(spentTimeHour.ToString()), "spentTimeHour");
-            form.Add(new StringContent(spentTimeMin.ToString()), "spentTimeMin");
-
-            if(answerText is not null)
+            if (answerText is not null)
             {
                 form.Add(new StringContent(answerText), "answerText");
             }
@@ -206,14 +207,15 @@ namespace MystatAPI
         
         public async Task<UploadedHomeworkInfo> UploadHomeworkFile(int homeworkId, HomeworkFile homeworkFile, string? answerText = null, int spentTimeHour = 99, int spentTimeMin = 59)
         {
-            MultipartFormDataContent form = new MultipartFormDataContent();
+            MultipartFormDataContent form = new MultipartFormDataContent
+            {
+                { new StringContent(homeworkId.ToString()), "id" },
+                { new StringContent(spentTimeHour.ToString()), "spentTimeHour" },
+                { new StringContent(spentTimeMin.ToString()), "spentTimeMin" },
+                { new ByteArrayContent(homeworkFile.Bytes, 0, homeworkFile.Bytes.Length), "file", homeworkFile.Name }
+            };
 
-            form.Add(new StringContent(homeworkId.ToString()), "id");
-            form.Add(new StringContent(spentTimeHour.ToString()), "spentTimeHour");
-            form.Add(new StringContent(spentTimeMin.ToString()), "spentTimeMin");
-            form.Add(new ByteArrayContent(homeworkFile.Bytes, 0, homeworkFile.Bytes.Length), "file", homeworkFile.Name);
-
-            if(answerText is not null)
+            if (answerText is not null)
             {
                 form.Add(new StringContent(answerText), "answerText");
             }
@@ -345,6 +347,37 @@ namespace MystatAPI
             }
 
             return response.StatusCode == HttpStatusCode.ResetContent;
+        }
+
+        public async Task<bool> ChangeCurrentGroup(int groupId)
+        {
+            var body = new
+            {
+                id_tgroups = groupId
+            };
+
+            const string url = "settings/change-current-group";
+            var requestMessage = new HttpRequestMessage(HttpMethod.Post, url);
+            requestMessage.Headers.Authorization = new AuthenticationHeaderValue("Bearer", AccessToken);
+            requestMessage.Content = new StringContent(JsonSerializer.Serialize(body), Encoding.UTF8, "application/json");
+
+            var response = await sharedClient.SendAsync(requestMessage);
+
+            requestMessage.Dispose();
+            if (response.StatusCode == HttpStatusCode.Unauthorized)
+            {
+                await UpdateAccessToken();
+                return await ChangeCurrentGroup(groupId);
+            }
+
+            bool isSuccess = response.StatusCode == HttpStatusCode.NoContent;
+
+            if(isSuccess)
+            {
+                GroupId = groupId;
+            }
+
+            return isSuccess;
         }
     }
 
