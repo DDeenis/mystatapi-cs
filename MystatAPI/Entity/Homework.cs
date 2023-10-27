@@ -129,12 +129,14 @@ namespace MystatAPI.Entity
     public class HomeworkFile
     {
         public string Name { get; }
+        public string Extension { get; }
         public byte[] Bytes { get; }
 
-        public HomeworkFile(string name, byte[] bytes)
+        public HomeworkFile(string name, string extension, byte[] bytes)
         {
             Name = name;
             Bytes = bytes;
+            Extension = extension;
         }
     }
 }
