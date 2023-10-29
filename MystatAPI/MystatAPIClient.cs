@@ -15,6 +15,7 @@ namespace MystatAPI
     public class MystatAPIClient
     {
         private static string[] archiveTypes = new string[] { ".zip", ".rar", ".7z" };
+        private static string[] imageTypes = new string[] { ".jpg", ".jpeg", ".jpe", ".png", ".bmp", ".gif", ".webp", ".avif", ".svg", ".ico" };
 
         const string applicationKey = "6a56a5df2667e65aab73ce76d1dd737f7d1faef9c52e8b8c55ac75f565d8e8a6";
         int? groupId;
@@ -200,14 +201,9 @@ namespace MystatAPI
             if(filePath is not null)
             {
                 var fileInfo = new FileInfo(filePath);
-                var fileName = fileInfo.Name;
                 var fileBytes = File.ReadAllBytes(filePath);
                 var fileFormContent = new ByteArrayContent(fileBytes, 0, fileBytes.Length);
-                if(archiveTypes.Contains(fileInfo.Extension))
-                {
-                    fileFormContent.Headers.Add("Content-Type", "application/octet-stream");
-                }
-                form.Add(fileFormContent, "file", fileName);
+                form.Add(AttachFileContentType(fileFormContent, fileInfo.Extension), "file", fileInfo.Name);
             }
 
             return await PostRequest<UploadedHomeworkInfo>("homework/operations/create", form);
@@ -223,11 +219,7 @@ namespace MystatAPI
             };
 
             var fileFormContent = new ByteArrayContent(homeworkFile.Bytes, 0, homeworkFile.Bytes.Length);
-            if (archiveTypes.Contains(homeworkFile.Extension))
-            {
-                fileFormContent.Headers.Add("Content-Type", "application/octet-stream");
-            }
-            form.Add(fileFormContent, "file", homeworkFile.Name);
+            form.Add(AttachFileContentType(fileFormContent, homeworkFile.Extension), "file", homeworkFile.Name);
 
             if (answerText is not null)
             {
@@ -392,6 +384,22 @@ namespace MystatAPI
             }
 
             return isSuccess;
+        }
+
+        // internal functions
+        internal static HttpContent AttachFileContentType(HttpContent content, string fileExtension)
+        {
+            if (archiveTypes.Contains(fileExtension))
+            {
+                content.Headers.Add("Content-Type", "application/octet-stream");
+            }
+            else if(imageTypes.Contains(fileExtension))
+            {
+                // or 'image/{matchedImageExtension}'
+                content.Headers.Add("Content-Type", "image/generic");
+            }
+
+            return content;
         }
     }
 
