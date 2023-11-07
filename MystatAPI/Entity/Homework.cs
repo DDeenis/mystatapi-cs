@@ -60,6 +60,36 @@ namespace MystatAPI.Entity
         public HomeworkStatus Status { get; set; }
     }
 
+    public class HomeworkDTO
+    {
+        [JsonPropertyName("data")]
+        public Homework[] Data { get; set; }
+
+        [JsonPropertyName("_meta")]
+        public HomeworkMeta Metadata { get; set; }
+    }
+
+    public class HomeworkDTOWithStatus
+    {
+        [JsonPropertyName("status")]
+        public HomeworkStatus Status { get; set; }
+
+        [JsonPropertyName("data")]
+        public Homework[] Data { get; set; }
+
+        [JsonPropertyName("_meta")]
+        public HomeworkMeta Metadata { get; set; }
+    }
+
+    public class HomeworkMeta
+    {
+        [JsonPropertyName("currentPage")]
+        public int CurrentPage { get; set; }
+
+        [JsonPropertyName("totalPages")]
+        public int TotalPages { get; set; }
+    }
+
     public class UploadedHomeworkInfo
     {
         [JsonPropertyName("id")]

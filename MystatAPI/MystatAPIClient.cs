@@ -172,7 +172,7 @@ namespace MystatAPI
             return schedule.OrderBy(s => TimeOnly.Parse(s.StartedAt)).ToArray();
         }
 
-        public async Task<Homework[]> GetHomework(int page = 1, HomeworkStatus status = HomeworkStatus.Active, int? specId = null, HomeworkType type = HomeworkType.Homework)
+        public async Task<HomeworkDTOWithStatus[]> GetHomeworkByType(int page = 1, int? specId = null, HomeworkType type = HomeworkType.Homework)
         {
             if(GroupId is null)
             {
@@ -180,7 +180,19 @@ namespace MystatAPI
                 GroupId = profileInfo.CurrentGroupId;
             }
 
-            return await MakeRequest<Homework[]>($"homework/operations/list?page={page}&status={(int)status}&type={(int)type}&group_id={groupId}" +
+            return await MakeRequest<HomeworkDTOWithStatus[]>($"homework/operations/list?page={page}&type={(int)type}&group_id={groupId}" +
+                                                 (specId == null ? "" : $"&spec_id={specId}"));
+        }
+        
+        public async Task<HomeworkDTO> GetHomework(int page = 1, HomeworkStatus status = HomeworkStatus.Active, int? specId = null, HomeworkType type = HomeworkType.Homework)
+        {
+            if(GroupId is null)
+            {
+                var profileInfo = await GetProfileInfo();
+                GroupId = profileInfo.CurrentGroupId;
+            }
+
+            return await MakeRequest<HomeworkDTO>($"homework/operations/list?page={page}&status={(int)status}&type={(int)type}&group_id={groupId}" +
                                                  (specId == null ? "" : $"&spec_id={specId}"));
         }
 
