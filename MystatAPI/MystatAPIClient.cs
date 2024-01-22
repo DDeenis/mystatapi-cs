@@ -24,7 +24,8 @@ namespace MystatAPI
 
 		private string AccessToken { get; set; }
         public string Language { get; private set; }
-        public string ContentEncoding { get; private set; }
+        public string ContentEncoding { get; set; }
+        public bool BypassUploadRestrictions { get; set; } = false;
         public UserLoginData LoginData { get; private set; }
 
         private static HttpClient sharedClient = new HttpClient()
@@ -55,11 +56,6 @@ namespace MystatAPI
             Language = language;
             sharedClient.DefaultRequestHeaders.Remove("x-language");
             sharedClient.DefaultRequestHeaders.Add("x-language", Language);
-        }
-
-        public void SetContentEncoding(string contentEncoding)
-        {
-            ContentEncoding = contentEncoding;
         }
 
         private async Task UpdateAccessToken()
@@ -442,8 +438,14 @@ namespace MystatAPI
         }
 
         // internal functions
-        internal static HttpContent AttachFileContentType(HttpContent content, string fileExtension)
+        internal HttpContent AttachFileContentType(HttpContent content, string fileExtension)
         {
+            if(BypassUploadRestrictions)
+            {
+                content.Headers.Add("Content-Type", "application/octet-stream");
+                return content;
+            }
+
             if (archiveTypes.Contains(fileExtension))
             {
                 content.Headers.Add("Content-Type", "application/octet-stream");
