@@ -112,6 +112,10 @@ namespace MystatAPI
                                 decompressStream.CopyTo(outputStream);
                             }
                         }
+                        else
+                        {
+                            throw new Exception($"Unsupported Content-Encoding: {encoding}");
+                        }
 
                         responseJson = Encoding.UTF8.GetString(outputStream.ToArray());
                     }
