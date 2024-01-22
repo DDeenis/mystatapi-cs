@@ -9,6 +9,7 @@ using MystatAPI.Exceptions;
 using System.Net.Http.Headers;
 using System.IO;
 using System.Linq;
+using System.IO.Compression;
 
 namespace MystatAPI
 {
@@ -23,6 +24,7 @@ namespace MystatAPI
 
 		private string AccessToken { get; set; }
         public string Language { get; private set; }
+        public string ContentEncoding { get; private set; }
         public UserLoginData LoginData { get; private set; }
 
         private static HttpClient sharedClient = new HttpClient()
@@ -30,11 +32,12 @@ namespace MystatAPI
             BaseAddress = new Uri("https://msapi.itstep.org/api/v2/"),
         };
 
-        public MystatAPIClient(UserLoginData loginData, string language = "ru")
+        public MystatAPIClient(UserLoginData loginData, string language = "ru", string contentEncoding = "gzip, br")
         {
             LoginData = loginData;
             AccessToken = string.Empty;
             Language = language;
+            ContentEncoding = contentEncoding;
             sharedClient.DefaultRequestHeaders.Add("x-language", Language);
         }
 
@@ -54,6 +57,11 @@ namespace MystatAPI
             sharedClient.DefaultRequestHeaders.Add("x-language", Language);
         }
 
+        public void SetContentEncoding(string contentEncoding)
+        {
+            ContentEncoding = contentEncoding;
+        }
+
         private async Task UpdateAccessToken()
         {
             var response = await Login();
@@ -69,23 +77,54 @@ namespace MystatAPI
             AccessToken = token;
         }
 
-        private async Task<T> MakeRequest<T>(string url, bool retryOnUnathorized = true)
+        private async Task<T> GetRequest<T>(string url, bool retryOnUnathorized = true)
         {
             var requestMessage = new HttpRequestMessage(HttpMethod.Get, url);
             requestMessage.Headers.Authorization = new AuthenticationHeaderValue("Bearer", AccessToken);
+            requestMessage.Headers.Add("Accept-Encoding", ContentEncoding);
+            //requestMessage.Version = new Version(2, 0);
 
             var response = await sharedClient.SendAsync(requestMessage);
             
             requestMessage.Dispose();
 
-            var responseJson = await response.Content.ReadAsStringAsync();
+            var responseJson = string.Empty;
+
+            try
+            {
+                string? encoding = response.Content.Headers.ContentEncoding.FirstOrDefault();
+                byte[] bytes = await response.Content.ReadAsByteArrayAsync();
+                using (var memoryStream = new MemoryStream(bytes))
+                {
+                    using (var outputStream = new MemoryStream())
+                    {
+                        if (encoding == "br")
+                        {
+                            using (var decompressStream = new BrotliStream(memoryStream, CompressionMode.Decompress))
+                            {
+                                decompressStream.CopyTo(outputStream);
+                            }
+                        }
+                        else if(encoding == "gzip" || encoding == "gz")
+                        {
+                            using (var decompressStream = new GZipStream(memoryStream, CompressionMode.Decompress))
+                            {
+                                decompressStream.CopyTo(outputStream);
+                            }
+                        }
+
+                        responseJson = Encoding.UTF8.GetString(outputStream.ToArray());
+                    }
+                }
+            }
+            catch { }
 
             if (response.StatusCode == HttpStatusCode.Unauthorized)
             {
                 if(retryOnUnathorized)
                 {
                     await UpdateAccessToken();
-                    return await MakeRequest<T>(url, false);
+                    return await GetRequest<T>(url, false);
                 }
 
                 var responseError = JsonSerializer.Deserialize<MystatAuthError>(responseJson);
@@ -154,17 +193,17 @@ namespace MystatAPI
 
         public async Task<ProfileInfo> GetProfileInfo()
         {
-            return await MakeRequest<ProfileInfo>("settings/user-info");
+            return await GetRequest<ProfileInfo>("settings/user-info");
         }
 
         public async Task<DaySchedule[]> GetScheduleByDate(DateTime date)
         {
-            return SortSchedule(await MakeRequest<DaySchedule[]>($"schedule/operations/get-by-date?date_filter={Utils.FormatDate(date)}"));
+            return SortSchedule(await GetRequest<DaySchedule[]>($"schedule/operations/get-by-date?date_filter={Utils.FormatDate(date)}"));
         }
 
         public async Task<DaySchedule[]> GetMonthSchedule(DateTime date)
         {
-            return SortSchedule(await MakeRequest<DaySchedule[]>($"schedule/operations/get-month?date_filter={Utils.FormatDate(date)}"));
+            return SortSchedule(await GetRequest<DaySchedule[]>($"schedule/operations/get-month?date_filter={Utils.FormatDate(date)}"));
         }
 
         private DaySchedule[] SortSchedule(DaySchedule[] schedule)
@@ -180,7 +219,7 @@ namespace MystatAPI
                 GroupId = profileInfo.CurrentGroupId;
             }
 
-            return await MakeRequest<HomeworkDTOWithStatus[]>($"homework/operations/list?page={page}&type={(int)type}&group_id={groupId}" +
+            return await GetRequest<HomeworkDTOWithStatus[]>($"homework/operations/list?page={page}&type={(int)type}&group_id={groupId}" +
                                                  (specId == null ? "" : $"&spec_id={specId}"));
         }
         
@@ -192,7 +231,7 @@ namespace MystatAPI
                 GroupId = profileInfo.CurrentGroupId;
             }
 
-            return await MakeRequest<HomeworkDTO>($"homework/operations/list?page={page}&status={(int)status}&type={(int)type}&group_id={groupId}" +
+            return await GetRequest<HomeworkDTO>($"homework/operations/list?page={page}&status={(int)status}&type={(int)type}&group_id={groupId}" +
                                                  (specId == null ? "" : $"&spec_id={specId}"));
         }
 
@@ -267,77 +306,77 @@ namespace MystatAPI
 
         public async Task<HomeworkCount[]> GetHomeworkCount(int? specId = null)
         {
-            return await MakeRequest<HomeworkCount[]>("count/homework" + (specId == null ? "" : $"?spec_id={specId}"));
+            return await GetRequest<HomeworkCount[]>("count/homework" + (specId == null ? "" : $"?spec_id={specId}"));
         }
 		
 		public async Task<Spec[]> GetSpecsList()
         {
-            return await MakeRequest<Spec[]>("settings/group-specs");
+            return await GetRequest<Spec[]>("settings/group-specs");
         }
 
         public async Task<Exam[]> GetAllExams()
         {
-            return await MakeRequest<Exam[]>("progress/operations/student-exams");
+            return await GetRequest<Exam[]>("progress/operations/student-exams");
         }
 
         public async Task<Exam[]> GetFutureExams()
         {
-            return await MakeRequest<Exam[]>("dashboard/info/future-exams");
+            return await GetRequest<Exam[]>("dashboard/info/future-exams");
         }
 
         public async Task<Activity[]> GetActivities()
         {
-            return await MakeRequest<Activity[]>("dashboard/progress/activity");
+            return await GetRequest<Activity[]>("dashboard/progress/activity");
         }
 
         public async Task<ActivityLog[]> GetActivitiesLog()
         {
-            return await MakeRequest<ActivityLog[]>("dashboard/progress/activity-web");
+            return await GetRequest<ActivityLog[]>("dashboard/progress/activity-web");
         }
 
         public async Task<GroupInfo[]> GetGroupInfo()
         {
-            return await MakeRequest<GroupInfo[]>("homework/settings/group-history");
+            return await GetRequest<GroupInfo[]>("homework/settings/group-history");
         }
 
         public async Task<Student[]> GetGroupLeaders()
         {
-            return await MakeRequest<Student[]>("dashboard/progress/leader-group");
+            return await GetRequest<Student[]>("dashboard/progress/leader-group");
         }
 
         public async Task<Student[]> GetStreamLeaders()
         {
-            return await MakeRequest<Student[]>("dashboard/progress/leader-stream");
+            return await GetRequest<Student[]>("dashboard/progress/leader-stream");
         }
 
         public async Task<LessonVisit[]> GetVisitHistory()
         {
-            return await MakeRequest<LessonVisit[]>("progress/operations/student-visits");
+            return await GetRequest<LessonVisit[]>("progress/operations/student-visits");
         }
 
         public async Task<LeadersSummary> GetGroupLeadersSummary()
         {
-            return await MakeRequest<LeadersSummary>("dashboard/progress/leader-group-points");
+            return await GetRequest<LeadersSummary>("dashboard/progress/leader-group-points");
         }
 
         public async Task<LeadersSummary> GetStreamLeadersSummary()
         {
-            return await MakeRequest<LeadersSummary>("dashboard/progress/leader-stream-points");
+            return await GetRequest<LeadersSummary>("dashboard/progress/leader-stream-points");
         }
 
         public async Task<ProgressMonthInfo[]> GetAttendanceInfo()
         {
-            return await MakeRequest<ProgressMonthInfo[]>("dashboard/chart/attendance");
+            return await GetRequest<ProgressMonthInfo[]>("dashboard/chart/attendance");
         }
 
         public async Task<ProgressMonthInfo[]> GetGradesInfo()
         {
-            return await MakeRequest<ProgressMonthInfo[]>("dashboard/chart/average-progress");
+            return await GetRequest<ProgressMonthInfo[]>("dashboard/chart/average-progress");
         }
 
         public async Task<EvaluateLessonItem[]> GetEvaluateLessonList()
         {
-            return await MakeRequest<EvaluateLessonItem[]>("feedback/students/evaluate-lesson-list");
+            return await GetRequest<EvaluateLessonItem[]>("feedback/students/evaluate-lesson-list");
         }
         
         public async Task<bool> EvaluateLesson(string key, int lessonMark, int teacherMark, string? comment = null)
