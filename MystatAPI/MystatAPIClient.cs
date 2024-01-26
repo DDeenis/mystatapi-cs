@@ -304,9 +304,10 @@ namespace MystatAPI
             return response.StatusCode == HttpStatusCode.NoContent;
         }
 
-        public async Task<HomeworkCount[]> GetHomeworkCount(int? specId = null)
+        public async Task<HomeworkCount[]> GetHomeworkCount(int? specId = null, HomeworkType type = HomeworkType.Homework)
         {
-            return await GetRequest<HomeworkCount[]>("count/homework" + (specId == null ? "" : $"?spec_id={specId}"));
+            var args = $"?type={(int)type}" + (specId == null ? "" : $"&spec_id={specId}");
+            return await GetRequest<HomeworkCount[]>($"count/homework{args}");
         }
 		
 		public async Task<Spec[]> GetSpecsList()
